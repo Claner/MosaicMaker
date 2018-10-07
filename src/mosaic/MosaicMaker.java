@@ -36,7 +36,7 @@ public class MosaicMaker {
     private Map<String, ImageInfo> map = new ConcurrentHashMap<>();
 
     public MosaicMaker(String dbPath, String aimPath, String outPath) {
-        this(dbPath, aimPath, outPath, 64, 64, 5, "RGB", 1920, 1080, 30, 20);
+        this(dbPath, aimPath, outPath, 64, 64, 5, "RGB", 1920, 1080, 300, 20);
     }
 
     public MosaicMaker(String dbPath, String aimPath, String outPath, int subWidth, int subHeight, int unitMin, String mode, int defaultW, int defaultH, int max, int threadNum) {
