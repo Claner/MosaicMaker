@@ -3,7 +3,7 @@
 
 ## 使用
 ```
-        MosaicMaker mosaicMaker = new MosaicMaker("G:\\avatar", "G:\\image\\YUI.jpg", "G:\\image\\YUI-5.jpg");
+        MosaicMaker mosaicMaker = new MosaicMaker("图库路径", "目标图片路径", "输出路径");
         try {
             mosaicMaker.make();
         } catch (IOException e) {
