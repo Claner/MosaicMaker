@@ -17,7 +17,7 @@
 ## 效果图(平均rgb值)
 ![image](https://github.com/Claner/MosaicMaker/blob/master/src/mosaic/YUI-5.jpg)
 
-## 效果图(平均值)
+## 效果图(平均gray值)
 ![image](https://github.com/Claner/MosaicMaker/blob/master/src/mosaic/YUI-gray-5.jpg)
 
 ## 参数设置
