@@ -36,7 +36,7 @@ public class MosaicMaker {
     private Map<String, ImageInfo> map = new ConcurrentHashMap<>();
 
     public MosaicMaker(String dbPath, String aimPath, String outPath) {
-        this(dbPath, aimPath, outPath, 64, 64, 5, "RGB", 1920, 1080, 300, 20);
+        this(dbPath, aimPath, outPath, 64, 64, 5, Mode.RGB, 1920, 1080, 300, 20);
     }
 
     public MosaicMaker(String dbPath, String aimPath, String outPath, int subWidth, int subHeight, int unitMin, String mode, int defaultW, int defaultH, int max, int threadNum) {
@@ -183,7 +183,7 @@ public class MosaicMaker {
             latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
-            System.out.println("计时器抛异常:");
+            System.out.println("计数器抛异常:");
         } finally {
             pool.shutdown();
         }
@@ -193,6 +193,19 @@ public class MosaicMaker {
 
     //搜索合适子图
     private BufferedImage findFitIm(BufferedImage image) {
+        switch (mode) {
+            case Mode.RGB:
+                return findByRGB(image);
+            case Mode.GRAY:
+                return findByGRAY(image);
+            case Mode.PHASH:
+                return findByPHASH(image);
+            default:
+                return null;
+        }
+    }
+
+    private BufferedImage findByRGB(BufferedImage image) {
         String[] keys = ImageUtil.calKey(image, mode).split("-");
         float r = Float.parseFloat(keys[0]);
         float g = Float.parseFloat(keys[1]);
@@ -206,6 +219,47 @@ public class MosaicMaker {
             float mb = Float.parseFloat(mk[2]);
             float curDif = Math.abs(mr - r) + Math.abs(mg - g) + Math.abs(mb - b);
             if (min > curDif && map.get(k).max > 0) {
+                min = curDif;
+                indexK = k;
+            }
+        }
+        ImageInfo info = map.get(indexK);
+        info.max = info.max - 1;
+        return info.im;
+    }
+
+    private BufferedImage findByGRAY(BufferedImage image) {
+        String key = ImageUtil.calKey(image, mode);
+        float gray = Float.parseFloat(key);
+        float min = Float.MAX_VALUE;
+        String indexK = null;
+        for (String k : map.keySet()) {
+            float curGray = Float.parseFloat(k);
+            float curDif = Math.abs(curGray - gray);
+            if (curDif < min) {
+                min = curDif;
+                indexK = k;
+            }
+        }
+        ImageInfo info = map.get(indexK);
+        info.max = info.max - 1;
+        return info.im;
+    }
+
+    private BufferedImage findByPHASH(BufferedImage image) {
+        String key = ImageUtil.calKey(image, mode);
+        int length = key.length();
+        int min = Integer.MAX_VALUE;
+        String indexK = null;
+        for (String k : map.keySet()) {
+            int curDif = 0;
+            for (int i = 0; i < length; i++) {
+                if (key.charAt(i) != k.charAt(i)) {
+                    curDif++;
+                }
+            }
+
+            if (curDif < min) {
                 min = curDif;
                 indexK = k;
             }
@@ -273,7 +327,7 @@ public class MosaicMaker {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    map.put(ImageUtil.calKey(im, "RGB"), new ImageInfo(max, im));
+                    map.put(ImageUtil.calKey(im, mode), new ImageInfo(max, im));
                 }
             }
             latch.countDown();

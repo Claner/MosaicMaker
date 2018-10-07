@@ -11,7 +11,8 @@ import java.io.IOException;
  */
 public class Demo {
     public static void main(String[] args) throws IOException {
-        MosaicMaker mosaicMaker = new MosaicMaker("G:\\avatar", "G:\\image\\YUI.jpg", "G:\\image\\YUI-5.jpg");
+        MosaicMaker mosaicMaker = new MosaicMaker("G:\\avatar", "G:\\image\\YUI.jpg", "G:\\image\\YUI-gray-5.jpg");
+        mosaicMaker.setMode(Mode.GRAY);
         try {
             mosaicMaker.make();
         } catch (IOException e) {

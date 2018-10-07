@@ -15,12 +15,12 @@ public class ImageUtil {
 
     public static final String calKey(BufferedImage image, String mode) {
         switch (mode) {
-            case "GRAY":
+            case Mode.GRAY:
                 return "" + calAvgGRAY(image);
-            case "RGB":
+            case Mode.RGB:
                 float[] res = calAvgRGB(image);
                 return res[0] + "-" + res[1] + "-" + res[2];
-            case "PHASH":
+            case Mode.PHASH:
                 return calPHash(image);
             default:
                 return "";
