@@ -34,6 +34,7 @@ public class MosaicMaker {
     //加载图库使用的线程数
     private int threadNum;
     private Map<String, ImageInfo> map = new ConcurrentHashMap<>();
+    private BinarySearchTree<ImageInfo> tree = new BinarySearchTree<>();
 
     public MosaicMaker(String dbPath, String aimPath, String outPath) {
         this(dbPath, aimPath, outPath, 64, 64, 5, Mode.RGB, 1920, 1080, 300, 20);
@@ -173,7 +174,9 @@ public class MosaicMaker {
                     int x = finalI * subWidth;
                     int y = j * subHeight;
                     BufferedImage curAimSubIm = aimIm.getSubimage(x, y, subWidth, subHeight);
-                    BufferedImage fitSubIm = findFitIm(curAimSubIm);
+                    ImageInfo curInfo = new ImageInfo(max, mode, ImageUtil.calKey(curAimSubIm, mode), curAimSubIm);
+                    BufferedImage fitSubIm = tree.getClose(curInfo).im;
+//                    BufferedImage fitSubIm = findFitIm(curAimSubIm);
                     g.drawImage(fitSubIm, x, y, subWidth, subHeight, null);
                 }
                 latch.countDown();
@@ -270,7 +273,7 @@ public class MosaicMaker {
     }
 
     //读取图库
-    private void readAllImage() {
+    public void readAllImage() {
         File dir = new File(this.dbPath);
         File[] files = dir.listFiles();
         long start = System.currentTimeMillis();
@@ -327,7 +330,8 @@ public class MosaicMaker {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    map.put(ImageUtil.calKey(im, mode), new ImageInfo(max, im));
+//                    map.put(ImageUtil.calKey(im, mode), new ImageInfo(max, im));
+                    tree.add(new ImageInfo(max, mode, ImageUtil.calKey(im, mode), im));
                 }
             }
             latch.countDown();
