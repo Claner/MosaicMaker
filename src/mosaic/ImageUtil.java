@@ -91,7 +91,7 @@ public class ImageUtil {
         return builder.toString();
     }
 
-    //透明合并
+    //透明
     public static final BufferedImage blend(BufferedImage im1, BufferedImage im2, float a) {
         int width = im1.getWidth();
         int height = im1.getHeight();

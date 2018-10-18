@@ -5,9 +5,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 
 public class MosaicMaker {
@@ -33,8 +32,11 @@ public class MosaicMaker {
     private int max;
     //加载图库使用的线程数
     private int threadNum;
+    //是否使用树
+    private boolean useTree = false;
     private Map<String, ImageInfo> map = new ConcurrentHashMap<>();
-    private BinarySearchTree<ImageInfo> tree = new BinarySearchTree<>();
+    //    private BinarySearchTree<BufferedImage> tree = new BinarySearchTree<>();
+    private AVLTree<BufferedImage> tree = new AVLTree<>();
 
     public MosaicMaker(String dbPath, String aimPath, String outPath) {
         this(dbPath, aimPath, outPath, 64, 64, 5, Mode.RGB, 1920, 1080, 300, 20);
@@ -142,6 +144,14 @@ public class MosaicMaker {
         this.threadNum = threadNum;
     }
 
+    public boolean isUseTree() {
+        return useTree;
+    }
+
+    public void setUseTree(boolean useTree) {
+        this.useTree = useTree;
+    }
+
     public void make() throws IOException {
         File aimFile = new File(aimPath);
         BufferedImage aimIm = ImageIO.read(aimFile);
@@ -174,9 +184,7 @@ public class MosaicMaker {
                     int x = finalI * subWidth;
                     int y = j * subHeight;
                     BufferedImage curAimSubIm = aimIm.getSubimage(x, y, subWidth, subHeight);
-                    ImageInfo curInfo = new ImageInfo(max, mode, ImageUtil.calKey(curAimSubIm, mode), curAimSubIm);
-                    BufferedImage fitSubIm = tree.getClose(curInfo).im;
-//                    BufferedImage fitSubIm = findFitIm(curAimSubIm);
+                    BufferedImage fitSubIm = findFitIm(curAimSubIm);
                     g.drawImage(fitSubIm, x, y, subWidth, subHeight, null);
                 }
                 latch.countDown();
@@ -195,12 +203,20 @@ public class MosaicMaker {
     }
 
     //搜索合适子图
-    private BufferedImage findFitIm(BufferedImage image) {
+    public BufferedImage findFitIm(BufferedImage image) {
         switch (mode) {
             case Mode.RGB:
-                return findByRGB(image);
+                if (useTree) {
+                    return tree.getCloseByRGB(ImageUtil.calKey(image, mode));
+                } else {
+                    return findByRGB(image);
+                }
             case Mode.GRAY:
-                return findByGRAY(image);
+                if (useTree) {
+                    return tree.getCloseByGray(ImageUtil.calKey(image, mode));
+                } else {
+                    return findByGRAY(image);
+                }
             case Mode.PHASH:
                 return findByPHASH(image);
             default:
@@ -299,7 +315,11 @@ public class MosaicMaker {
         } finally {
             pool.shutdown();
         }
-        System.out.println("共读取" + map.size() + "张图片");
+        if (useTree) {
+            System.out.println("共读取" + tree.size() + "张图片");
+        } else {
+            System.out.println("共读取" + map.size() + "张图片");
+        }
         System.out.println("读取图库完成，耗时" + (System.currentTimeMillis() - start) + "毫秒");
     }
 
@@ -330,8 +350,11 @@ public class MosaicMaker {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-//                    map.put(ImageUtil.calKey(im, mode), new ImageInfo(max, im));
-                    tree.add(new ImageInfo(max, mode, ImageUtil.calKey(im, mode), im));
+                    if (useTree) {
+                        tree.insert(ImageUtil.calKey(im, mode), im);
+                    } else {
+                        map.put(ImageUtil.calKey(im, mode), new ImageInfo(max, im));
+                    }
                 }
             }
             latch.countDown();

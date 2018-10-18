@@ -1,11 +1,12 @@
 package mosaic;
 
-import java.util.Stack;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Created by Clanner on 2018/10/11.
+ * Created by Clanner on 2018/10/13.
  */
-public class BinarySearchTree<T extends Comparable<T>> {
+public class BinarySearchTree<V> {
 
     //节点数量
     private int nodeCount;
@@ -13,11 +14,13 @@ public class BinarySearchTree<T extends Comparable<T>> {
     private Node root;
 
     private class Node {
-        T data;
+        Float key;
+        V value;
         Node left, right;
 
-        public Node(T data, Node left, Node right) {
-            this.data = data;
+        public Node(Float key, V value, Node left, Node right) {
+            this.key = key;
+            this.value = value;
             this.left = left;
             this.right = right;
         }
@@ -31,108 +34,130 @@ public class BinarySearchTree<T extends Comparable<T>> {
         return size() == 0;
     }
 
-    public T getClose(T elem) {
-        if (root == null) return null;
-        return getClose(root, elem);
-    }
-
-    private T getClose(Node node, T elem) {
-        Stack<Node> stack = new Stack<Node>();
-        stack.push(node);
-        Node last = null;
-        while (!stack.isEmpty()) {
-            Node p = stack.pop();
-            last = p;
-            int cmp = elem.compareTo(p.data);
-            if (cmp == 1) {
-                if (p.right != null) stack.push(p.right);
-            } else if (cmp == -1) {
-                if (p.left != null) stack.push(p.left);
+    public V getClose(Float key) {
+        if (root == null || key == null) return null;
+        Node p = root;
+        List<Node> list = new ArrayList<>();
+        while (p != null) {
+            int cmp = key.compareTo(p.key);
+            if (cmp > 0) {
+                list.add(p);
+                p = p.right;
+            } else if (cmp < 0) {
+                list.add(p);
+                p = p.left;
             } else {
-                return p.data;
+                return p.value;
             }
         }
-        return last.data;
+        float min = 300.f;
+        int index = 0;
+        for (int i = 0; i < list.size(); i++) {
+            float curDif = Math.abs(list.get(i).key - key);
+            if (curDif < min) {
+                min = curDif;
+                index = i;
+            }
+        }
+        return list.get(index).value;
     }
 
     //获取元素
-    public T get(T elem) {
-        if (root == null) return null;
-        return get(root, elem);
+    public V get(Float key) {
+        if (root == null || key == null) return null;
+        return get(root, key);
     }
 
-    private T get(Node node, T elem) {
+    private V get(Node node, Float key) {
         if (node != null) {
-            int tmp = node.data.compareTo(elem);
+            int tmp = key.compareTo(node.key);
             if (tmp > 0) {
-                return get(node.right, elem);
+                return get(node.right, key);
             } else if (tmp < 0) {
-                return get(node.left, elem);
+                return get(node.left, key);
             } else {
-                return node.data;
+                return node.value;
             }
         }
         return null;
     }
 
     //添加元素
-    public boolean add(T elem) {
-        if (contains(elem)) {
+    public boolean add(Float key, V value) {
+        if (contains(key)) {
             return false;
         } else {
-            root = add(root, elem);
+            root = add(root, key, value);
             nodeCount++;
             return true;
         }
     }
 
-    private Node add(Node node, T elem) {
+    private Node add(Node node, Float key, V value) {
         if (node == null) {
-            node = new Node(elem, null, null);
+            node = new Node(key, value, null, null);
         } else {
-            if (elem.compareTo(node.data) < 0) {
-                node.left = add(node.left, elem);
+            if (key.compareTo(node.key) < 0) {
+                node.left = add(node.left, key, value);
+            } else if (key.compareTo(node.key) > 0) {
+                node.right = add(node.right, key, value);
             } else {
-                node.right = add(node.right, elem);
+
             }
         }
         return node;
     }
 
-    public boolean remove(T elem) {
-        if (contains(elem)) {
-            root = remove(root, elem);
+    public boolean contains(Float key) {
+        return contains(root, key);
+    }
+
+    private boolean contains(Node node, Float key) {
+        if (node == null) return false;
+        int cmp = key.compareTo(node.key);
+        if (cmp < 0) {
+            return contains(node.left, key);
+        } else if (cmp > 0) {
+            return contains(node.right, key);
+        } else {
+            return true;
+        }
+    }
+
+    public boolean remove(Float key) {
+        if (contains(key)) {
+            root = remove(root, key);
             nodeCount--;
             return true;
         }
         return false;
     }
 
-    private Node remove(Node node, T elem) {
+    private Node remove(Node node, Float key) {
         if (node == null) return null;
-        int cmp = elem.compareTo(node.data);
+        int cmp = key.compareTo(node.key);
         if (cmp < 0) {
-            node.left = remove(node.left, elem);
+            node.left = remove(node.left, key);
         } else if (cmp > 0) {
-            node.right = remove(node.right, elem);
+            node.right = remove(node.right, key);
         } else {
             //要删除的节点有右子树或没有子树时，清空节点，删除节点的父节点指向删除节点的右子树
             if (node.left == null) {
                 Node rightChild = node.right;
-                node.data = null;
+                node.value = null;
                 node = null;
                 return rightChild;
                 //要删除的节点有左子树或没有子树时，清空节点，删除节点的父节点指向删除节点的左子树
             } else if (node.right == null) {
                 Node leftChild = node.left;
-                node.data = null;
+                node.value = null;
                 node = null;
                 return leftChild;
                 //要删除的节点有右子树和左子树，
             } else {
                 Node tmp = findMin(node.right);
-                node.data = tmp.data;
-                node.right = remove(root.right, tmp.data);
+                node.value = tmp.value;
+                node.right = remove(root.right, tmp.key);
             }
         }
         return node;
@@ -148,22 +173,6 @@ public class BinarySearchTree<T extends Comparable<T>> {
         while (node.right != null)
             node = node.right;
         return node;
-    }
-
-    public boolean contains(T elem) {
-        return contains(root, elem);
-    }
-
-    private boolean contains(Node node, T elem) {
-        if (node == null) return false;
-        int cmp = elem.compareTo(node.data);
-        if (cmp < 0) {
-            return contains(node.left, elem);
-        } else if (cmp > 0) {
-            return contains(node.right, elem);
-        } else {
-            return true;
-        }
     }
 
     //返回树的高度

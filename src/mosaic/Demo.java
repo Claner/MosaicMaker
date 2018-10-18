@@ -1,19 +1,14 @@
 package mosaic;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Created by Clanner on 2018/10/6.
  */
 public class Demo {
     public static void main(String[] args) throws IOException {
-        MosaicMaker mosaicMaker = new MosaicMaker("G:\\avatar", "G:\\image\\YUI.jpg", "G:\\image\\YUI-gray-5.jpg");
-//        mosaicMaker.setMode(Mode.GRAY);
+        MosaicMaker mosaicMaker = new MosaicMaker("G:\\avatar", "G:\\image\\YUI.jpg", "G:\\image\\YUI-tree-gray-5.jpg");
+        mosaicMaker.setUseTree(true);
+        mosaicMaker.setMode(Mode.GRAY);
         try {
             mosaicMaker.make();
         } catch (IOException e) {
